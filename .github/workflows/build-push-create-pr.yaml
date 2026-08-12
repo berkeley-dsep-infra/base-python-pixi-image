@@ -1,0 +1,25 @@
+name: Call Shared Build, Push and Create PR Workflow
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE'
+      - '.github/**'
+      - 'images/**'
+
+jobs:
+  call-shared-build-push-create-pr:
+    uses: berkeley-dsep-infra/update-deployment/.github/workflows/shared-build-push-create-pr.yaml@DH-650
+    with:
+      image: ${{ vars.IMAGE}}
+      hub: ${{ vars.HUB }}
+      app_id: ${{ vars.APP_ID }}
+      image_builder_bot_name: ${{ vars.IMAGE_BUILDER_BOT_NAME }}
+      image_builder_bot_email: ${{ vars.IMAGE_BUILDER_BOT_EMAIL }}
+    secrets:
+      GAR_SECRET_KEY: ${{ secrets.GAR_SECRET_KEY }}
+      PRIVATE_KEY_SECRET: ${{ secrets.PRIVATE_KEY_SECRET }}

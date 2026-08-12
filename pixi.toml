@@ -1,0 +1,80 @@
+[workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+name = "base-python-pixi-image"
+version = "0.1.0"
+
+[dependencies]
+# Python 3.14: this base intentionally tracks current Python rather than
+# holding back for older conda-forge builds (see base-python-image for that).
+python = "3.14.*"
+
+# Items required for basic level functionality
+gh-scoped-creds = "==4.1"
+
+# DH-418, bunch of stuff fails to install if git is set
+# higher to this e.g. git==2.47.1
+git = "==2.55.0"
+# vscode related
+jupyter-vscode-proxy = "==0.7"
+code-server = "==4.132.0"
+# jupyter related
+jupyter-archive = "==3.5.1"
+jupyter-resource-usage = "==1.2.1"
+jupyter-server-proxy = "==4.5.0"
+jupyter_server = "==2.20.0"
+jupyterhub = "==5.5.1"
+jupyterlab = "==4.6.3"
+jupyterlab-git = "==0.54.1"
+jupyter-offlinenotebook = "==0.3.2"
+jupyterlab_rise = "==0.43.1"
+jupytext = "==1.19.5"
+jupyterlab-favorites = "==3.5.2"
+jupyterlab_server = "==2.28.0"
+jupyterlab_widgets = "==3.0.16"
+syncthing = "==2.1.3"
+jupyter-syncthing-proxy = "==1.0.3"
+ipywidgets = "==8.1.8"
+nbgitpuller = "==1.3.0"
+notebook = "==7.6.2"
+# major bump from 6.1.6, re-derived for python 3.14; verify against course
+# autograding before relying on it
+otter-grader = "==7.0.0"
+wrapt = "==1.17.3"
+pip = "==26.2.1"
+# datascience packages
+datascience = "==0.18.1"
+numpy = "==2.4.6"
+pandas = "==3.0.5"
+plotly = "==6.9.0"
+scikit-learn = "==1.9.0"
+scipy = "==1.18.0"
+seaborn = "==0.13.2"
+statsmodels = "==0.14.6"
+matplotlib = "==3.11.1"
+matplotlib-inline = "==0.2.2"
+ipympl = "==0.10.0"
+sympy = "==1.14.0"
+# DH-654 conflicts with git-crendential-helpers -- this pin moved past the
+# version implicated in that issue when re-derived for python 3.14;
+# re-verify DH-654 is not still relevant before relying on this.
+pyjwt = "==2.13.0"
+nbclassic = "==1.3.3"
+sqlite = "==3.53.4"
+
+# mamba itself, so it's present in the built image for end users to
+# `mamba install`/`pip install` at runtime -- pixi is only used to solve
+# this environment at build time, it is not shipped in the final image.
+mamba = "==2.9.0"
+
+# Needed for webpdf notebook exports (`playwright install chromium` below).
+# Held below latest by code-server's nodejs requirement.
+playwright = "==1.60.0"
+
+# For https://github.com/berkeley-dsep-infra/datahub/issues/1846
+# Conda does not have these
+[pypi-dependencies]
+git-credential-helpers = "==0.2"
+nbconvert = { version = "==7.17.1", extras = ["webpdf"] }
+nb2pdf = "==0.6.2"
+nbpdfexport = "==0.2.1"

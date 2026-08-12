@@ -1,0 +1,14 @@
+name: Call Shared Build and Test Container Image Workflow
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE'
+      - '.github/**'
+      - 'images/**'
+
+jobs:
+  call-shared-build-test-image:
+    uses: berkeley-dsep-infra/update-deployment/.github/workflows/shared-build-test-image.yaml@DH-650

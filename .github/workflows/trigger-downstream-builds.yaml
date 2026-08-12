@@ -1,0 +1,128 @@
+name: Trigger Downstream Builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Which downstream group to build?"
+        required: true
+        type: choice
+        options:
+          - base
+          - user
+      base_image_name:
+        description: "Base image name (e.g. ucb-datahub-2018/testing/base-python-image)"
+        required: true
+      base_image_sha:
+        description: "Base image SHA/tag to propagate"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  trigger-downstreams:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY_SECRET }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Discover repos using base image
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          ORG="${{ github.repository_owner }}"
+          BASE_IMAGE="${{ github.event.inputs.base_image_name }}"
+
+          echo "Listing repositories in $ORG..."
+          REPOS=$(gh repo list "$ORG" \
+            --limit 500 \
+            --json nameWithOwner \
+            --jq '.[].nameWithOwner')
+
+          MATCHING_REPOS=""
+
+          for repo in $REPOS; do
+            echo "Checking $repo..."
+
+            # Skip if Dockerfile does not exist
+            if ! gh api "repos/$repo/contents/Dockerfile" >/dev/null 2>&1; then
+              echo "  No Dockerfile — skipping"
+              continue
+            fi
+
+            # Fetch and decode Dockerfile content
+            CONTENT=$(gh api "repos/$repo/contents/Dockerfile" \
+              --jq '.content' | base64 -d)
+
+            # Check if Dockerfile uses the base image
+            if echo "$CONTENT" | grep -q "$BASE_IMAGE"; then
+              echo "  Uses base image"
+              MATCHING_REPOS="$MATCHING_REPOS"$'\n'"$repo"
+            else
+              echo "  Dockerfile found but does not use base image"
+            fi
+          done
+
+          if [ -z "$MATCHING_REPOS" ]; then
+            echo "No downstream repos found."
+            exit 0
+          fi
+
+          echo "Discovered repos:"
+          echo "$MATCHING_REPOS"
+
+          # Save matching repos to GitHub Actions environment
+          {
+            echo "REPOS<<EOF"
+            echo "$MATCHING_REPOS"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+
+      - name: Trigger downstream workflows
+        if: env.REPOS != ''
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          TARGET="${{ github.event.inputs.target }}"
+          BASE_NAME="${{ github.event.inputs.base_image_name }}"
+          BASE_SHA="${{ github.event.inputs.base_image_sha }}"
+
+          for repo in $REPOS; do
+            NAME=$(basename "$repo")
+            SHOULD_TRIGGER=false
+
+            # Base repos
+            if [[ "$TARGET" == "base" && "$NAME" =~ ^base-.*-image$ && "$NAME" != "base-python-image" ]]; then
+              SHOULD_TRIGGER=true
+            fi
+            # User repos
+            if [[ "$TARGET" == "user" && "$NAME" =~ -image && ! "$NAME" =~ ^base-.*-image$ ]]; then
+              SHOULD_TRIGGER=true
+            fi
+
+            if [[ "$SHOULD_TRIGGER" == "true" ]]; then
+              echo "Triggering downstream workflow for $repo"
+
+              # Full JSON body including event_type
+              PAYLOAD=$(jq -n \
+                --arg name "$BASE_NAME" \
+                --arg sha "$BASE_SHA" \
+                '{event_type: "base-image-updated",
+                  client_payload: {base_image_name: $name, base_image_sha: $sha}}')
+              # Post repository_dispatch
+              echo "$PAYLOAD" | gh api -X POST "/repos/$repo/dispatches" \
+                -H "Accept: application/vnd.github.v3+json" \
+                --input -
+            fi
+          done
