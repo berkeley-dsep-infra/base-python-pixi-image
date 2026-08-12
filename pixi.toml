@@ -23,7 +23,7 @@ jupyter-archive = "==3.5.1"
 jupyter-resource-usage = "==1.2.1"
 jupyter-server-proxy = "==4.5.0"
 jupyter_server = "==2.20.0"
-jupyterhub = "==5.5.1"
+jupyterhub = "==5.2.1" # pinned to match what's deployed on the hub side
 jupyterlab = "==4.6.3"
 jupyterlab-git = "==0.54.1"
 jupyter-offlinenotebook = "==0.3.2"
