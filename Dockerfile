@@ -80,6 +80,17 @@ RUN if [ "$(dpkg-divert --truename /usr/bin/man)" = "/usr/bin/man.REAL" ]; then 
 
 RUN mandb -c
 
+# -------------------------------------------------------------------
+# pixi solve scripts
+# -------------------------------------------------------------------
+# Lives here, not copied per-repo, so any image built on top of this one
+# inherits it automatically instead of keeping its own copy in sync by hand.
+# solve.sh handles both cases: a base image with nothing to merge, and a
+# leaf image that needs to pin everything already installed before adding
+# its own packages (see solve.sh for why).
+COPY scripts/solve.sh scripts/merge-base-manifest.py scripts/pixi-pypi-requirements.py scripts/dedupe-explicit-spec.py /opt/pixi-solve/
+RUN chmod +x /opt/pixi-solve/solve.sh
+
 # ===================================================================
 # Solve the environment with pixi, then materialize it with micromamba
 # ===================================================================
@@ -100,19 +111,13 @@ RUN curl -fsSL "https://github.com/mamba-org/micromamba-releases/releases/downlo
     chmod +x /usr/local/bin/micromamba
 RUN curl -fsSL https://pixi.sh/install.sh | PIXI_HOME=/opt/pixi sh
 ENV PATH=/opt/pixi/bin:$PATH
+RUN install -d -o ${NB_USER} -g ${NB_USER} /tmp/solve
 
 USER ${NB_USER}
 WORKDIR /tmp/solve
-COPY --chown=${NB_USER}:${NB_USER} pixi.toml scripts/pixi-pypi-requirements.py ./
+COPY --chown=${NB_USER}:${NB_USER} pixi.toml ./
 
-# conda-explicit-spec is pixi's native, checksummed explicit-install export;
-# --ignore-pypi-errors is required because it can't represent PyPI packages
-# (see https://github.com/jupyterhub/repo2docker/issues/1339), which is why
-# pixi-pypi-requirements.py separately extracts those from `pixi list --json`.
-RUN pixi install && \
-    pixi workspace export conda-explicit-spec --platform linux-64 --ignore-pypi-errors /tmp/solve-out && \
-    mv /tmp/solve-out/*_conda_spec.txt /tmp/explicit.txt && \
-    pixi list --json | python3 pixi-pypi-requirements.py > /tmp/pip-requirements.txt
+RUN /opt/pixi-solve/solve.sh
 
 # ===================================================================
 # Build /srv/conda and notebook environment
