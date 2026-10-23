@@ -11,6 +11,9 @@ python = "3.14.*"
 
 # Items required for basic level functionality
 gh-scoped-creds = "==4.1"
+# DH-806
+ca-certificates = "==2026.10.19"
+certifi = "==2026.10.23"
 
 # DH-418, bunch of stuff fails to install if git is set
 # higher to this e.g. git==2.47.1
@@ -75,6 +78,6 @@ playwright = "==1.60.0"
 # Conda does not have these
 [pypi-dependencies]
 git-credential-helpers = "==0.2"
-nbconvert = { version = "==7.17.1", extras = ["webpdf"] }
+nbconvert = { version = "==7.17.2", extras = ["webpdf"] }
 nb2pdf = "==0.6.2"
 nbpdfexport = "==0.2.1"
