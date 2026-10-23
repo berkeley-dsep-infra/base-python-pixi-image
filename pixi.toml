@@ -78,6 +78,6 @@ playwright = "==1.60.0"
 # Conda does not have these
 [pypi-dependencies]
 git-credential-helpers = "==0.2"
-nbconvert = { version = "==7.17.1", extras = ["webpdf"] }
+nbconvert = { version = "==7.17.2", extras = ["webpdf"] }
 nb2pdf = "==0.6.2"
 nbpdfexport = "==0.2.1"
