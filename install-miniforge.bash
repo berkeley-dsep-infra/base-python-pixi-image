@@ -20,6 +20,9 @@ export PATH="${CONDA_DIR}/bin:$PATH"
 conda config --system --set auto_update_conda false
 conda config --system --set show_channel_urls true
 
+# DH-806
+env -u XDG_CACHE_HOME mamba install -n base -y ca-certificates==2026.10.19 certifi==2026.10.23
+
 # empty conda history file,
 # which seems to result in some effective pinning of packages in the initial env,
 # which we don't intend.

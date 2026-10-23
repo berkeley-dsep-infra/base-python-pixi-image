@@ -72,6 +72,12 @@ RUN apt-get -qq update --yes && \
     apt-get -qq clean && \
     rm -rf /var/lib/apt/lists/*
 
+# DH-806
+RUN apt-get -qq update --yes && \
+    apt-get -qq install --yes --no-install-recommends --only-upgrade ca-certificates && \
+    apt-get -qq clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Remove diverted man binary
 RUN if [ "$(dpkg-divert --truename /usr/bin/man)" = "/usr/bin/man.REAL" ]; then \
         rm -f /usr/bin/man; \
