@@ -20,7 +20,10 @@ certifi = "==2026.10.23"
 git = "==2.55.0"
 # vscode related
 jupyter-vscode-proxy = "==0.7"
-code-server = "==4.145.0"
+# code-server is installed from the upstream release tarball in the
+# Dockerfile, not from conda-forge: the conda-forge recipe pins nodejs 22.*
+# even though upstream code-server targets Node 24, which conflicts with
+# nodejs 24 below. The tarball bundles its own Node binary.
 # jupyter related
 jupyter-archive = "==3.5.1"
 jupyter-resource-usage = "==1.2.1"

@@ -185,8 +185,22 @@ USER ${NB_USER}
 
 ENV PATH=${CONDA_DIR}/envs/notebook/bin:${CONDA_DIR}/bin:${DEFAULT_PATH}
 
-# Cleanup temp files
+# -------------------------------------------------------------------
+# code-server (upstream release; see pixi.toml for why not conda-forge)
+# -------------------------------------------------------------------
 USER root
+ARG CODE_SERVER_VERSION=4.145.0
+ARG CODE_SERVER_SHA256=771bf6038658034d7caf509fcc44af50f0b8bdac5e738177b6cf9c4181dd3382
+RUN curl -fsSL "https://github.com/coder/code-server/releases/download/v${CODE_SERVER_VERSION}/code-server-${CODE_SERVER_VERSION}-linux-amd64.tar.gz" \
+        -o /tmp/code-server.tar.gz && \
+    echo "${CODE_SERVER_SHA256}  /tmp/code-server.tar.gz" | sha256sum -c - && \
+    mkdir -p /opt/code-server && \
+    tar -xzf /tmp/code-server.tar.gz -C /opt/code-server --strip-components=1 && \
+    ln -s /opt/code-server/bin/code-server /usr/local/bin/code-server && \
+    rm /tmp/code-server.tar.gz && \
+    code-server --version
+
+# Cleanup temp files
 RUN rm -rf /tmp/*
 
 USER ${NB_USER}
