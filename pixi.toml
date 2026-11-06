@@ -39,6 +39,7 @@ syncthing = "==2.1.3"
 jupyter-syncthing-proxy = "==1.0.3"
 ipywidgets = "==8.1.8"
 nbgitpuller = "==1.3.0"
+nodejs = "24.*"
 notebook = "==7.6.2"
 # major bump from 6.1.6, re-derived for python 3.14; verify against course
 # autograding before relying on it
